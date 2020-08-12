@@ -18,9 +18,8 @@ def main():
             
             dct = {}
             print("\nPrinting each laptop record")
-            for row in records:
-                print(row)
-
+            print(records)
+            
     except Error as e:
         print("Error while connection to MySQL", e)
     finally:

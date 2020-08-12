@@ -1,21 +1,21 @@
 import mysql.connector
 
 class MySQLLib:
-    def __init__(self, host:str, database:str, username:str, password:str):
+    def __init__(self, host:str, database:str, user:str, password:str):
         self.host = host
         self.database = database
-        self.username = username
+        self.user = user
         self.password = password
     
-    def select_query(self, table_name:str, field:str='*'):
+    def select_query(self, table_name:str, field:str):
         connection = None
-        query = 'select %s from %s'.format(field, table_name)
+        query = 'select ' + field + ' from ' + table_name 
         records = None
 
         try:
-            connection = mysql.connect(host=self.host, 
+            connection = mysql.connector.connect(host=self.host, 
             database=self.database, 
-            user=self.username, 
+            user=self.user, 
             password=self.password)
 
             cursor = connection.cursor()
@@ -33,4 +33,3 @@ class MySQLLib:
                 connection.close()
 
         return records
-        
