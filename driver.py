@@ -1,5 +1,6 @@
 from mysqllib import MySQLLib
 from pgsqllib import PGSQLLib
+import datetime
 
 def main():
     db = MySQLLib(host='192.168.1.33', 
@@ -9,7 +10,7 @@ def main():
     )
     
     destination = PGSQLLib(host='localhost', 
-    port='3000', 
+    port='4000', 
     database='odoovisio2', 
     user='samuel', 
     password='samuel'
@@ -23,16 +24,19 @@ def main():
         entry = []
         contact_entry = []
 
+        '''Filtering partner attributes'''
         # (row[0]) SKIP
         
         # (row[1]) organization -> company_id
         entry.append(2) if row[1] == 'VIS' else entry.append(3)
 
         # (row[2]) client_key -> name
-        entry.append(row[2])
+        key_processed = str(row[2]).replace("'", "")
+        entry.append(key_processed)
             
         # (row[3]) client_name -> display_name
-        entry.append(row[3])
+        name_processed = str(row[3]).replace("'", "")
+        entry.append(name_processed)
 
         # (row[4]) category -> is_company (True)
         entry.append('true')
@@ -89,11 +93,11 @@ def main():
         # (row[16]) country_1 -> country_id
         entry.append(100) if row[16] == "ID" else entry.append("null")
 
-        # CONTACT 
+        '''Filtering contact attributes''' 
         # (row[0]) SKIP
         
         # (row[1]) organization -> company_id
-        contact_entry.append(2) if row[1] == 'VIS' else entry.append(3)
+        contact_entry.append(2) if row[1] == 'VIS' else contact_entry.append(3)
 
         # (row[2]) client_key -> name
         contact_entry.append(row[9])
@@ -124,29 +128,59 @@ def main():
         contact_entry.append(row[15])
 
         # (row[16]) country_1 -> country_id
-        contact_entry.append(100) if row[16] == "ID" else entry.append("null")
+        contact_entry.append(100) if row[16] == "ID" else contact_entry.append("null")
 
         full_entry.append(entry)
         full_entry.append(contact_entry)
-        break
 
     for i in range(len(full_entry)):
         item = full_entry[i]
         time = str(datetime.datetime.now()).split(".")[0]
-
+        
         if i % 2 == 0: 
-            query = "insert into res_partner (company_id, name, display_name, is_company, phone, street, city, \
-                state_id, zip, country_id, active, customer, supplier, employee, \"type\", color, partner_share, \
-                message_bounce, invoice_warn, picking_warn, sale_warn, create_date, create_uid, write_uid) values \
-                ({}, '{}', '{}', {}, '{}', '{}', '{}', {}, '{}', {}, true, true, false, false, 'contact', 0, true, \
-                0, 'no-message', 'no-message', 'no-message', '{}', 2, 2);".format(item[0], item[1], item[2], item[3], 
-                item[4], item[5], item[6], item[7], item[8], item[9], time)
+            query = "insert into res_partner (company_id, name, display_name, commercial_company_name, \
+                is_company, phone, street, city, state_id, zip, country_id, active, customer, supplier, \
+                employee, \"type\", color, partner_share, message_bounce, invoice_warn, picking_warn, \
+                sale_warn, create_date, create_uid, write_uid, lang) values ({}, '{}', '{}', '{}', {}, '{}', \
+                '{}', '{}', {}, '{}', {}, true, true, false, false, 'contact', 0, true, 0, 'no-message', \
+                'no-message', 'no-message', '{}', 2, 2, 'en_US');".format(item[0], item[1], item[2], item[2], 
+                item[3], item[4], item[5], item[6], item[7], item[8], item[9], time)
             destination.execute(query)
-        else:
-            newest_id = destination.execute_select("select min(id) from res_partner")
 
-            NotImplementedError
+            new_partner_id = destination.execute_select("select max(id) from res_partner")[0][0]
+
+            update_query = "update ob_business_partner set id_odoo = {} where client_key = '{}'".format(
+                new_partner_id, item[1])
+            db.execute_update(update_query)
+
+            ## UPDATE STATUS QUERY
+            # update_status_query = "update ob_business_partner set status = {} where client_key = '{}'".format(
+            #     'S', item[1])
+            # db.execute_update(update_status_query)
+
+            ## UPDATE MIGRATION QUERY
+            # update_migration_query = "update ob_business_partner set isMigrated = {} where client_key = '{}'".format(
+            #     '1', item[1])
+            # db.execute_update(update_migration_query)
+
+            update_commercial_query = "update res_partner set commercial_partner_id = {} where id = {}".format(
+            new_partner_id, new_partner_id)
+            destination.execute(update_commercial_query)
+        else:
+            new_partner_id = destination.execute_select("select max(id) from res_partner")[0][0]
+            query = "insert into res_partner (company_id, name, display_name, commercial_company_name, \
+                is_company, phone, street, city, state_id, zip, country_id, active, customer, supplier, \
+                employee, \"type\", color, partner_share, message_bounce, invoice_warn, picking_warn, sale_warn, \
+                parent_id, create_date, create_uid, write_uid, lang) values ({}, '{}', '{}', '{}', {}, '{}', '{}', \
+                '{}', {}, '{}', {}, true, true, false, false, 'contact', 0, true, 0, 'no-message', 'no-message', \
+                'no-message', {}, '{}', 2, 2, 'en_US');".format(item[0], item[1], item[2], item[2], item[3], 
+                item[4], item[5], item[6], item[7], item[8], item[9], new_partner_id, time)
+            destination.execute(query)
+            
+            current_partner_id = destination.execute_select("select max(id) from res_partner")[0][0]
+            update_commercial_query = "update res_partner set commercial_partner_id = {} where id = {}".format(
+            new_partner_id, current_partner_id)
+            destination.execute(update_commercial_query)
 
 if __name__ == '__main__':
     main()
-

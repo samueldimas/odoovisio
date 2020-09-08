@@ -58,3 +58,50 @@ class MySQLLib:
                 connection.close()
 
         return records
+
+    def execute_update(self, argument:str):
+        connection = None
+        
+        try:
+            connection = mysql.connector.connect(
+                host=self.host, 
+                database=self.database,
+                user=self.user,
+                password=self.password
+            )
+
+            cursor = connection.cursor()
+            cursor.execute(argument)
+            connection.commit()
+        
+        except mysql.connector.Error as e:
+            print("MySQL connection error:", e)
+        
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+
+    def execute(self, argument:str):
+        records = None
+
+        try:
+            connection = mysql.connector.connect(host=self.host, 
+            database=self.database, 
+            user=self.user, 
+            password=self.password)
+
+            cursor = connection.cursor()
+            cursor.execute(argument)
+
+            records = cursor.fetchall()
+
+        except mysql.connector.Error as e:
+            print("MySQL connection error:", e)
+
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+
+        return records

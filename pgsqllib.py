@@ -54,4 +54,3 @@ class PGSQLLib:
                 connection.close()
         
         return records
-        
