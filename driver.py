@@ -16,7 +16,7 @@ def main():
     password='samuel'
     )
 
-    select_result = db.select_query("ob_business_partner", "*")
+    select_result = db.execute_select("select * from ob_business_partner")
     
     full_entry = []
 
@@ -151,17 +151,17 @@ def main():
 
             update_query = "update ob_business_partner set id_odoo = {} where client_key = '{}'".format(
                 new_partner_id, item[1])
-            db.execute_update(update_query)
+            db.execute(update_query)
 
             ## UPDATE STATUS QUERY
             # update_status_query = "update ob_business_partner set status = {} where client_key = '{}'".format(
             #     'S', item[1])
-            # db.execute_update(update_status_query)
+            # db.execute(update_status_query)
 
             ## UPDATE MIGRATION QUERY
             # update_migration_query = "update ob_business_partner set isMigrated = {} where client_key = '{}'".format(
             #     '1', item[1])
-            # db.execute_update(update_migration_query)
+            # db.execute(update_migration_query)
 
             update_commercial_query = "update res_partner set commercial_partner_id = {} where id = {}".format(
             new_partner_id, new_partner_id)

@@ -20,7 +20,7 @@ def main():
 
     i = 0
     for row in select_result:
-        ''' Initialize default values '''
+        ''' Initialize default values (dipakai di banyak query)'''
         time = str(datetime.datetime.now()).split(".")[0]
         product_id = 0
         company_id = 0
@@ -41,6 +41,7 @@ def main():
         if row[1] == "VIS":
             order_entry["company_id"] = 2
         elif row[1] == "" or row[1] is None:
+            '''Ada kasus di mana organization string kosong atau None (null di MySQL)''' 
             order_entry["company_id"] = 2
         else: 
             order_entry["company_id"] = 3
@@ -49,6 +50,10 @@ def main():
         order_entry["date_order"] = "{} 00:00:00".format(row[3].strftime("%Y-%m-%d"))
         order_entry["validity_date"] = row[3].strftime("%Y-%m-%d")
 
+        '''
+        Ada banyak client_key di table ob_invoice yang tidak sesuai dengan 
+        table ob_business_partner jadi harus dipetakan terlebih dahulu 
+        '''
         if (row[4] == 'PT NUTRIFOOD INDONESIA_1'):
             order_client = 'PT NUTRIFOOD INDONESIA'
         elif (row[4] == 'gotravindo'):
@@ -101,7 +106,7 @@ def main():
             print(row[4])
             order_client = row[4]
 
-
+        
         partner_id_query = "select id_odoo from ob_business_partner where client_key = '{}'".format(order_client)
         partner_id = db_source.execute(partner_id_query)[0][0]
         order_entry["partner_id"] = partner_id
