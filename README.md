@@ -11,4 +11,5 @@ Repositori terdiri dari 4 *file* Python
 Author: Samuel Dimas Partogi
 
 Kerja Praktik Semester Gasal 2020/2021
+
 Dosen Pembimbing: Hafiyyan Sayyid Fadhlillah, S.Kom., M.Kom.
