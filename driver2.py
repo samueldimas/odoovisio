@@ -16,7 +16,7 @@ def main():
     password='samuel'
     )
 
-    select_result = db_source.select_query("ob_invoice", "*")
+    select_result = db_source.execute_select("select * from ob_invoice")
 
     i = 0
     for row in select_result:
@@ -106,7 +106,7 @@ def main():
             print(row[4])
             order_client = row[4]
 
-        
+        '''Business partner di database app sudah diberikan'''
         partner_id_query = "select id_odoo from ob_business_partner where client_key = '{}'".format(order_client)
         partner_id = db_source.execute(partner_id_query)[0][0]
         order_entry["partner_id"] = partner_id
@@ -237,6 +237,29 @@ def main():
         invoice_entry["currency_id"] = 12
 
         # TODO MAPPING ID_PIUTANG
+        '''Pemetaan produk 
+        Sesuai request, sekarang produk diibedakan:
+        - Dikenai PPN (VIS)
+        - Tidak dikenai PPN (VML)
+
+        Produk yang dikenai PPN: 1-30
+        Produk yang tidak dikenai PPN: 31-60
+        (Id bervariasi tergantung pengaturan awal di Odoo seperti apa, ini kasus di Odoo mock)
+
+        Lalu masing-masing produk piutangnya dipisahkan
+        - Piutang dengan PPN (VIS)
+            - Piutang SMS : 1,2,3,4,5,28
+            - Piutang Hosting Sim Card : 8,9,19,21,23
+            - Piutang Berlangganan G Suite : 7,10,11,12,13,14,15,16,17
+            - Piutang Berlangganan Domain : 30
+            - Piutang Berlangganan Website : 29
+        - Piutang tanpa PPN (VML)
+            - Piutang SMS : 31,32,33,34,35,58
+            - Piutang Hosting Sim Card : 38,39,49,51,53
+            - Piutang Berlangganan G Suite : 37,40,41,42,43,44,45,46,47
+            - Piutang Berlangganan Domain : 60
+            - Piutang Berlangganan Website : 59
+        '''
         id_sms_vis = [1, 2, 3, 4, 5, 28]
         id_sms_vml = [el + 30 for el in id_sms_vis]
 
